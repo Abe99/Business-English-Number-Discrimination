@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Business English Number Training</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #ffffff;
+      color: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    #app {
+      max-width: 600px;
+      text-align: center;
+    }
+
+    .number {
+      font-size: 48px;
+      margin: 30px 0;
+    }
+
+    .spelling {
+      font-size: 22px;
+      margin-top: 20px;
+      color: #333;
+    }
+
+    .instruction {
+      font-size: 16px;
+      color: #555;
+      margin-top: 20px;
+    }
+
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Business English Number Training</h1>
+    <p>
+      You will see a number.<br>
+      Pronounce it out loud.<br>
+      Press <strong>Enter</strong> to check.<br>
+      Press <strong>Enter</strong> again to continue.
+    </p>
+    <button id="startBtn">Start Training</button>
+  </div>
+
+  <script>
+    const app = document.getElementById("app");
+    const startBtn = document.getElementById("startBtn");
+
+    let levels = [];
+    let currentLevel = 0;
+    let currentIndex = 0;
+    let showingAnswer = false;
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function generateLevels() {
+      levels = [];
+
+      // 2–7 digit numbers
+      const digitRanges = [
+        [10, 99],
+        [100, 999],
+        [1000, 9999],
+        [10000, 99999],
+        [100000, 999999],
+        [1000000, 9999999]
+      ];
+
+      digitRanges.forEach(range => {
+        const items = [];
+        for (let i = 0; i < 100; i++) {
+          items.push(randomInt(range[0], range[1]));
+        }
+        levels.push({ type: "cardinal", items });
+      });
+
+      // Decimals
+      levels.push({
+        type: "decimal",
+        items: Array.from({ length: 100 }, () =>
+          (Math.random() * 100).toFixed(2)
+        )
+      });
+
+      // Percentages
+      levels.push({
+        type: "percentage",
+        items: Array.from({ length: 100 }, () =>
+          (Math.random() * 100).toFixed(1) + "%"
+        )
+      });
+
+      // Currency (USD)
+      levels.push({
+        type: "currency",
+        items: Array.from({ length: 100 }, () => {
+          const dollars = randomInt(1, 100000);
+          const cents = randomInt(0, 99).toString().padStart(2, "0");
+          return `$${dollars.toLocaleString()}.${cents}`;
+        })
+      });
+
+      // Dates (dd/mm/yyyy)
+      levels.push({
+        type: "date",
+        items: Array.from({ length: 100 }, () => {
+          const day = randomInt(1, 28);
+          const month = randomInt(1, 12);
+          const year = randomInt(2024, 2030);
+          return `${day.toString().padStart(2, "0")}/${month
+            .toString()
+            .padStart(2, "0")}/${year}`;
+        })
+      });
+    }
+
+    function showItem() {
+      const value = levels[currentLevel].items[currentIndex];
+
+      app.innerHTML = `
+        <div class="number">${value}</div>
+        <div class="instruction">Pronounce the number out loud, then press Enter.</div>
+      `;
+      showingAnswer = false;
+    }
+
+    function showAnswer() {
+      const value = levels[currentLevel].items[currentIndex];
+      const spelling = spellOut(value, levels[currentLevel].type);
+
+      app.innerHTML = `
+        <div class="number">${value}</div>
+        <div class="spelling">${spelling}</div>
+        <div class="instruction">Press Enter to continue.</div>
+      `;
+      showingAnswer = true;
+    }
+
+    function nextItem() {
+      currentIndex++;
+      if (currentIndex >= 10) {
+        currentLevel++;
+        currentIndex = 0;
+
+        if (currentLevel >= levels.length) {
+          app.innerHTML = `<h2>Training complete.</h2>`;
+          document.removeEventListener("keydown", handleKey);
+          return;
+        }
+      }
+      showItem();
+    }
+
+    function handleKey(e) {
+      if (e.key !== "Enter") return;
+      if (!showingAnswer) showAnswer();
+      else nextItem();
+    }
+
+    function spellOut(value, type) {
+      switch (type) {
+        case "decimal":
+          return value.replace(".", " point ");
+        case "percentage":
+          return value.replace("%", " percent");
+        case "currency":
+          return value
+            .replace("$", "")
+            .replace(".", " dollars and ")
+            .concat(" cents");
+        case "date":
+          const [d, m, y] = value.split("/");
+          return `the ${ordinal(+d)} of ${monthName(+m)}, ${yearSpoken(y)}`;
+        default:
+          return numberToWords(+value);
+      }
+    }
+
+    // --- helpers for spelling ---
+    function numberToWords(num) {
+      return new Intl.NumberFormat("en-US", {
+        notation: "standard"
+      }).format(num);
+    }
+
+    function ordinal(n) {
+      const ordinals = [
+        "first","second","third","fourth","fifth","sixth","seventh","eighth","ninth","tenth",
+        "eleventh","twelfth","thirteenth","fourteenth","fifteenth","sixteenth","seventeenth",
+        "eighteenth","nineteenth","twentieth","twenty-first","twenty-second","twenty-third",
+        "twenty-fourth","twenty-fifth","twenty-sixth","twenty-seventh","twenty-eighth"
+      ];
+      return ordinals[n - 1];
+    }
+
+    function monthName(m) {
+      return [
+        "January","February","March","April","May","June",
+        "July","August","September","October","November","December"
+      ][m - 1];
+    }
+
+    function yearSpoken(y) {
+      return y.slice(0, 2) + " " + y.slice(2);
+    }
+
+    startBtn.addEventListener("click", () => {
+      generateLevels();
+      currentLevel = 0;
+      currentIndex = 0;
+      showItem();
+      document.addEventListener("keydown", handleKey);
+    });
+  </script>
+</body>
+</html>
