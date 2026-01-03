@@ -72,7 +72,6 @@
     function generateLevels() {
       levels = [];
 
-      // 2–7 digit numbers
       const digitRanges = [
         [10, 99],
         [100, 999],
@@ -90,7 +89,6 @@
         levels.push({ type: "cardinal", items });
       });
 
-      // Decimals
       levels.push({
         type: "decimal",
         items: Array.from({ length: 100 }, () =>
@@ -98,7 +96,6 @@
         )
       });
 
-      // Percentages
       levels.push({
         type: "percentage",
         items: Array.from({ length: 100 }, () =>
@@ -106,7 +103,6 @@
         )
       });
 
-      // Currency (USD)
       levels.push({
         type: "currency",
         items: Array.from({ length: 100 }, () => {
@@ -116,7 +112,6 @@
         })
       });
 
-      // Dates (dd/mm/yyyy)
       levels.push({
         type: "date",
         items: Array.from({ length: 100 }, () => {
@@ -132,7 +127,6 @@
 
     function showItem() {
       const value = levels[currentLevel].items[currentIndex];
-
       app.innerHTML = `
         <div class="number">${value}</div>
         <div class="instruction">Pronounce the number out loud, then press Enter.</div>
@@ -175,28 +169,93 @@
 
     function spellOut(value, type) {
       switch (type) {
-        case "decimal":
-          return value.replace(".", " point ");
-        case "percentage":
-          return value.replace("%", " percent");
-        case "currency":
-          return value
-            .replace("$", "")
-            .replace(".", " dollars and ")
-            .concat(" cents");
-        case "date":
+        case "decimal": {
+          const [whole, frac] = value.split(".");
+          return (
+            numberToWords(+whole) +
+            " point " +
+            frac.split("").map(d => numberToWords(+d)).join(" ")
+          );
+        }
+
+        case "percentage": {
+          const num = value.replace("%", "");
+          if (num.includes(".")) {
+            const [whole, frac] = num.split(".");
+            return (
+              numberToWords(+whole) +
+              " point " +
+              frac.split("").map(d => numberToWords(+d)).join(" ") +
+              " percent"
+            );
+          }
+          return numberToWords(+num) + " percent";
+        }
+
+        case "currency": {
+          const clean = value.replace("$", "").replace(/,/g, "");
+          const [dollars, cents] = clean.split(".");
+          const dollarPart =
+            +dollars === 1
+              ? "one dollar"
+              : numberToWords(+dollars) + " dollars";
+
+          const centPart =
+            cents && +cents > 0
+              ? " and " + numberToWords(+cents) + " cents"
+              : "";
+
+          return dollarPart + centPart;
+        }
+
+        case "date": {
           const [d, m, y] = value.split("/");
           return `the ${ordinal(+d)} of ${monthName(+m)}, ${yearSpoken(y)}`;
+        }
+
         default:
           return numberToWords(+value);
       }
     }
 
-    // --- helpers for spelling ---
     function numberToWords(num) {
-      return new Intl.NumberFormat("en-US", {
-        notation: "standard"
-      }).format(num);
+      const ones = [
+        "zero","one","two","three","four","five","six","seven","eight","nine",
+        "ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen",
+        "seventeen","eighteen","nineteen"
+      ];
+
+      const tens = [
+        "","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"
+      ];
+
+      if (num < 20) return ones[num];
+      if (num < 100) {
+        const t = Math.floor(num / 10);
+        const r = num % 10;
+        return r === 0 ? tens[t] : `${tens[t]} ${ones[r]}`;
+      }
+      if (num < 1000) {
+        const h = Math.floor(num / 100);
+        const r = num % 100;
+        return r === 0
+          ? `${ones[h]} hundred`
+          : `${ones[h]} hundred ${numberToWords(r)}`;
+      }
+
+      if (num < 1_000_000) {
+        const t = Math.floor(num / 1000);
+        const r = num % 1000;
+        return r === 0
+          ? `${numberToWords(t)} thousand`
+          : `${numberToWords(t)} thousand ${numberToWords(r)}`;
+      }
+
+      const m = Math.floor(num / 1_000_000);
+      const r = num % 1_000_000;
+      return r === 0
+        ? `${numberToWords(m)} million`
+        : `${numberToWords(m)} million ${numberToWords(r)}`;
     }
 
     function ordinal(n) {
@@ -230,3 +289,4 @@
   </script>
 </body>
 </html>
+
