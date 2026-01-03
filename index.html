@@ -211,6 +211,68 @@
 
     function numberToWords(num) {
       const ones = [
-        "zero","one","two","three","four","five","six",
+        "zero","one","two","three","four","five","six","seven","eight","nine",
+        "ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen",
+        "seventeen","eighteen","nineteen"
+      ];
+
+      const tens = [
+        "","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"
+      ];
+
+      if (num < 20) return ones[num];
+      if (num < 100) {
+        const t = Math.floor(num / 10);
+        const r = num % 10;
+        return r === 0 ? tens[t] : `${tens[t]} ${ones[r]}`;
+      }
+      if (num < 1000) {
+        const h = Math.floor(num / 100);
+        const r = num % 100;
+        return r === 0
+          ? `${ones[h]} hundred`
+          : `${ones[h]} hundred ${numberToWords(r)}`;
+      }
+      if (num < 1_000_000) {
+        const t = Math.floor(num / 1000);
+        const r = num % 1000;
+        return r === 0
+          ? `${numberToWords(t)} thousand`
+          : `${numberToWords(t)} thousand ${numberToWords(r)}`;
+      }
+      const m = Math.floor(num / 1_000_000);
+      const r = num % 1_000_000;
+      return r === 0
+        ? `${numberToWords(m)} million`
+        : `${numberToWords(m)} million ${numberToWords(r)}`;
+    }
+
+    function ordinal(n) {
+      const ordinals = [
+        "first","second","third","fourth","fifth","sixth","seventh","eighth","ninth","tenth",
+        "eleventh","twelfth","thirteenth","fourteenth","fifteenth","sixteenth","seventeenth",
+        "eighteenth","nineteenth","twentieth","twenty-first","twenty-second","twenty-third",
+        "twenty-fourth","twenty-fifth","twenty-sixth","twenty-seventh","twenty-eighth"
+      ];
+      return ordinals[n - 1];
+    }
+
+    function monthName(m) {
+      return [
+        "January","February","March","April","May","June",
+        "July","August","September","October","November","December"
+      ][m - 1];
+    }
+
+    function yearSpoken(y) {
+      return y.slice(0, 2) + " " + y.slice(2);
+    }
+
+    startBtn.addEventListener("click", startTraining);
+    document.addEventListener("keydown", handleKey);
+  </script>
+</body>
+</html>
+
 
 
